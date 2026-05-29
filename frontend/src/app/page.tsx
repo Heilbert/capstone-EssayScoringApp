@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 type Result = {
   score: number;
+  feedback: string;
   category: string;
   strengths: string[];
   weaknesses: string[];
