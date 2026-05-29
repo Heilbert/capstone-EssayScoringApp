@@ -77,6 +77,7 @@ def predict(data: EssayRequest):
 
     return {
         "score": score,
+        "feedback": feedback,
         "category": feedback_detail["category"],
         "strengths": feedback_detail["strengths"],
         "weaknesses": feedback_detail["weaknesses"],
