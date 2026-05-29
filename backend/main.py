@@ -219,11 +219,11 @@ def generate_feedback(score, essay_text):
     else:
         weaknesses.append("Kesimpulan masih kurang terlihat atau belum dikembangkan.")
 
-    if score >= 5:
+    if score >= 6:
         category = "Sangat Baik"
-    elif score >= 4:
+    elif score >= 5:
         category = "Baik"
-    elif score >= 3:
+    elif score >= 4:
         category = "Cukup"
     else:
         category = "Perlu Perbaikan"
