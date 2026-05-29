@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 type Result = {
   score: number;
-  feedback: string;
+  category: string;
+  strengths: string[];
+  weaknesses: string[];
   essay_length: number;
 };
 
@@ -147,6 +149,10 @@ export default function Home() {
                 <strong>Skor:</strong> {result.score}
               </p>
 
+	      <p className="text-gray-800">
+                <strong>Kategori:</strong> {result.category}
+              </p>
+
               <p className="text-gray-800">
                 <strong>Feedback:</strong> {result.feedback}
               </p>
@@ -154,6 +160,25 @@ export default function Home() {
               <p className="text-gray-800">
                 <strong>Panjang Esai:</strong> {result.essay_length} karakter
               </p>
+
+              <div className="mt-4">
+                <h3 className="font-semibold text-green-700">Strength</h3>
+                <ul className="mt-2 list-disc pl-5 text-gray-800">
+                  {result.strengths.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-4">
+                <h3 className="font-semibold text-red-700">Weakness</h3>
+                  <ul className="mt-2 list-disc pl-5 text-gray-800">
+                    {result.weaknesses.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+               </div>
+
             </div>
           )}
         </section>

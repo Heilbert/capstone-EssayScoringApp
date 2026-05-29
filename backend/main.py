@@ -73,9 +73,13 @@ def predict(data: EssayRequest):
     prediction = model_xgb.predict(features_scaled)
     score = int(round(float(prediction[0])))
 
+    feedback_detail = generate_feedback(score, essay_text)
+
     return {
         "score": score,
-        "feedback": f"Esai diprediksi mendapatkan skor {score}.",
+        "category": feedback_detail["category"],
+        "strengths": feedback_detail["strengths"],
+        "weaknesses": feedback_detail["weaknesses"],
         "essay_length": len(essay_text)
     }
 
@@ -183,3 +187,48 @@ def extract_features_single(essay_text):
     all_features = all_features.reindex(columns=feature_columns, fill_value=0)
 
     return all_features
+
+def generate_feedback(score, essay_text):
+    words = essay_text.split()
+    word_count = len(words)
+    sentences = essay_text.count(".") + essay_text.count("!") + essay_text.count("?")
+
+    strengths = []
+    weaknesses = []
+
+    if word_count >= 250:
+        strengths.append("Esai memiliki panjang yang cukup dan menunjukkan pengembangan ide.")
+    else:
+        weaknesses.append("Esai masih terlalu pendek dan perlu pengembangan isi.")
+
+    if sentences >= 5:
+        strengths.append("Struktur esai cukup jelas dengan beberapa kalimat pendukung.")
+    else:
+        weaknesses.append("Struktur esai masih kurang lengkap dan perlu lebih banyak kalimat pendukung.")
+
+    evidence_words = ["because", "for example", "according", "article", "evidence", "shows", "states"]
+    if any(word in essay_text.lower() for word in evidence_words):
+        strengths.append("Esai menggunakan bukti atau rujukan dari teks sumber.")
+    else:
+        weaknesses.append("Esai belum banyak menggunakan bukti atau contoh dari teks sumber.")
+
+    conclusion_words = ["therefore", "in conclusion", "overall", "finally"]
+    if any(word in essay_text.lower() for word in conclusion_words):
+        strengths.append("Esai memiliki bagian penutup atau kesimpulan.")
+    else:
+        weaknesses.append("Kesimpulan masih kurang terlihat atau belum dikembangkan.")
+
+    if score >= 6:
+        category = "Sangat Baik"
+    elif score >= 4:
+        category = "Baik"
+    elif score >= 2:
+        category = "Cukup"
+    else:
+        category = "Perlu Perbaikan"
+
+    return {
+        "category": category,
+        "strengths": strengths[:3],
+        "weaknesses": weaknesses[:3]
+    }
