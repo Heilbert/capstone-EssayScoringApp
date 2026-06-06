@@ -95,7 +95,7 @@ def predict(data: EssayRequest):
     return {
         "prompt_name": data.prompt_name,
         "score": score,
-        "feedback": f"Esai mendapatkan skor {score}.",
+        "feedback": f"The essay received a predicted score of {score}.",
         "max_score": max_score,
         "achievement": achievement,
         "category": feedback_detail["category"],
@@ -135,7 +135,7 @@ async def upload_file(file: UploadFile = File(...)):
 
     else:
         return {
-            "error": "Format file tidak didukung. Gunakan .txt atau .pdf"
+            "error": "Unsupported file format. Please upload a .txt or .pdf file."
         }
 
     return {
@@ -232,26 +232,26 @@ def generate_feedback(score, essay_text, source_text=""):
     source_lower = source_text.lower()
 
     if word_count >= 250:
-        strengths.append("Esai memiliki panjang yang cukup dan menunjukkan pengembangan ide.")
+        strengths.append("The essay has sufficient length and shows developed ideas.")
     else:
-        weaknesses.append("Esai masih terlalu pendek dan perlu pengembangan isi.")
+        weaknesses.append("The essay is still too short and needs further content development.")
 
     if sentences >= 5:
-        strengths.append("Struktur esai cukup jelas dengan beberapa kalimat pendukung.")
+        strengths.append("The essay has a clear structure with several supporting sentences.")
     else:
-        weaknesses.append("Struktur esai masih kurang lengkap dan perlu lebih banyak kalimat pendukung.")
+        weaknesses.append("The essay structure is still limited and needs more supporting sentences.")
 
     evidence_words = ["because", "for example", "according", "article", "evidence", "shows", "states"]
-    if any(word in essay_text.lower() for word in evidence_words):
-        strengths.append("Esai menggunakan bukti atau rujukan dari teks sumber.")
+    if any(word in essay_lower for word in evidence_words):
+        strengths.append("The essay uses evidence or references from the source text.")
     else:
-        weaknesses.append("Esai belum banyak menggunakan bukti atau contoh dari teks sumber.")
+        weaknesses.append("The essay does not use enough evidence or examples from the source text.")
 
     conclusion_words = ["therefore", "in conclusion", "overall", "finally"]
-    if any(word in essay_text.lower() for word in conclusion_words):
-        strengths.append("Esai memiliki bagian penutup atau kesimpulan.")
+    if any(word in essay_lower for word in conclusion_words):
+        strengths.append("The essay includes a conclusion or closing statement.")
     else:
-        weaknesses.append("Kesimpulan masih kurang terlihat atau belum dikembangkan.")
+        weaknesses.append("The conclusion is not clearly presented or needs further development.")
 
     if source_lower:
         source_words = set(re.findall(r"\b[a-z]{5,}\b", source_lower))
@@ -261,9 +261,9 @@ def generate_feedback(score, essay_text, source_text=""):
         overlap_ratio = len(overlap) / max(len(source_words), 1)
 
         if overlap_ratio > 0.03:
-            strengths.append("Esai memiliki keterkaitan kata kunci dengan bacaan referensi.")
+            strengths.append("The essay shows keyword relevance to the reading material.")
         else:
-            weaknesses.append("Esai masih kurang menunjukkan keterkaitan dengan bacaan referensi.")
+            weaknesses.append("The essay shows limited connection to the reading material.")
 
     if score >= 6:
         category = "Excellent"

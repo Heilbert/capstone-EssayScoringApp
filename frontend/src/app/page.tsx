@@ -52,7 +52,7 @@ export default function Home() {
         setPrompts(data);
         setSelectedPrompt(data[0]);
       } catch (error) {
-        alert("Gagal mengambil data prompt dari backend.");
+        alert("Failed to retrieve essay prompts.");
       }
     };
 
@@ -68,11 +68,11 @@ export default function Home() {
   const handleSubmit = async () => {
 
     if (!selectedPrompt) {
-      alert("Pilih kategori/topik essay terlebih dahulu.");
+      alert("Please select an essay topic first.");
       return;
     }
     if (!essay.trim()) {
-      alert("Masukkan teks esai terlebih dahulu.");
+      alert("Please enter your essay first.");
       return;
     }
 
@@ -105,7 +105,7 @@ export default function Home() {
         date: new Date().toLocaleString()
       });
     } catch (error) {
-      alert("Gagal menghubungi backend.");
+      alert("Unable to connect to the backend.");
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export default function Home() {
 
       setEssay(data.text);
     } catch (error) {
-      alert("Gagal upload file.");
+      alert("Failed to upload file.");
     } finally {
       setLoading(false);
     }
@@ -152,16 +152,16 @@ export default function Home() {
       <div className="mx-auto max-w-4xl space-y-6">
         <section className="rounded-xl bg-white p-8 shadow">
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            Essay Scoring App
+            Automated Essay Scoring System
           </h1>
 
 <p className="mb-6 text-gray-600">
-  Pilih kategori/topik essay, baca pertanyaan dan bacaan referensi, lalu tulis jawaban essay untuk mendapatkan skor otomatis.
+  Select an essay topic, read the source material, review the essay question, and write your response to receive an automated score and feedback.
 </p>
 
 <div className="mb-6">
   <label className="mb-2 block font-semibold text-gray-900">
-    Pilih Kategori / Topik Essay
+    Select Essay Topic
   </label>
 
   <select
@@ -185,25 +185,30 @@ export default function Home() {
 
 {selectedPrompt && (
   <>
-    <div className="mb-6 rounded-lg bg-blue-50 p-4">
-      <h2 className="mb-2 text-xl font-bold text-blue-900">
-        Pertanyaan
-      </h2>
-      <p className="whitespace-pre-line text-sm text-blue-900">
-        {selectedPrompt.assignment}
-      </p>
-    </div>
-
     <div className="mb-6 rounded-lg bg-gray-50 p-4">
       <h2 className="mb-2 text-xl font-bold text-gray-900">
-        Bacaan Referensi
+        Reading Material
       </h2>
       <div className="max-h-64 overflow-y-auto whitespace-pre-line text-sm text-gray-700">
         {selectedPrompt.source_text}
       </div>
     </div>
+
+
+    <div className="mb-6 rounded-lg bg-blue-50 p-4">
+      <h2 className="mb-2 text-xl font-bold text-blue-900">
+        Essay Question
+      </h2>
+      <p className="whitespace-pre-line text-sm text-blue-900">
+        {selectedPrompt.assignment}
+      </p>
+    </div>
   </>
 )}
+
+          <label className="mb-2 block font-semibold text-gray-900">
+            Upload Essay File (Optional)
+          </label>
 
           <input
             type="file"
@@ -212,9 +217,13 @@ export default function Home() {
             className="mb-4 block w-full rounded-lg border border-gray-300 p-3 text-gray-900"
           />
 
+          <label className="mb-2 block font-semibold text-gray-900">
+            Your Essay Answer
+          </label>
+
           <textarea
             className="h-60 w-full rounded-lg border border-gray-300 p-4 text-gray-900 outline-none focus:border-blue-500"
-            placeholder="Tulis esai di sini..."
+            placeholder="Please write your essay here..."
             value={essay}
             onChange={(e) => setEssay(e.target.value)}
           />
@@ -224,13 +233,13 @@ export default function Home() {
             disabled={loading}
             className="mt-4 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400"
           >
-            {loading ? "Memproses..." : "Nilai Esai"}
+            {loading ? "Processing..." : "Score Essay"}
           </button>
 
 {result && (
   <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow">
     <h2 className="mb-4 text-2xl font-bold text-gray-900">
-      Hasil Penilaian
+      Assessment Result
     </h2>
 
     <div className="grid gap-4 md:grid-cols-2">
@@ -270,7 +279,7 @@ export default function Home() {
         </h3>
 
         <ul className="space-y-2 text-gray-800">
-          {result.strengths.map((item, index) => (
+          {result.strengths?.map((item, index) => (
             <li key={index}>✓ {item}</li>
           ))}
         </ul>
@@ -282,7 +291,7 @@ export default function Home() {
         </h3>
 
         <ul className="space-y-2 text-gray-800">
-          {result.weaknesses.map((item, index) => (
+          {result.weaknesses?.map((item, index) => (
             <li key={index}>✗ {item}</li>
           ))}
         </ul>
@@ -295,19 +304,19 @@ export default function Home() {
         <section className="rounded-xl bg-white p-8 shadow">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">
-              Riwayat Penilaian
+              Assessment History
             </h2>
 
             <button
               onClick={clearHistory}
               className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
             >
-              Hapus Riwayat
+              Clear History
             </button>
           </div>
 
           {history.length === 0 ? (
-            <p className="text-gray-600">Belum ada riwayat penilaian.</p>
+            <p className="text-gray-600">No assessment history available.</p>
           ) : (
             <div className="space-y-4">
               {history.map((item, index) => (
@@ -317,11 +326,11 @@ export default function Home() {
                 >
                   <p className="text-sm text-gray-500">{item.date}</p>
 <p className="mt-2 text-gray-800">
-  <strong>Prompt:</strong> {item.prompt_name}
+  <strong>Topic:</strong> {item.prompt_name}
 </p>
 
 <p className="text-gray-800">
-  <strong>Skor:</strong> {item.score} / {item.max_score}
+  <strong>Score:</strong> {item.score} / {item.max_score}
 </p>
 
 <p className="text-gray-800">
