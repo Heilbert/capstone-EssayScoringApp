@@ -15,6 +15,7 @@ from textstat import flesch_reading_ease, gunning_fog, dale_chall_readability_sc
 import joblib
 
 import nltk
+import json
 
 from gensim.models import Word2Vec
 
@@ -43,6 +44,9 @@ ling_cols = [
     "conjunction_ratio"
 ]
 
+with open("prompts.json", "r", encoding="utf-8") as f:
+    prompts_data = json.load(f)
+
 app = FastAPI()
 
 # Allow frontend access
@@ -56,6 +60,9 @@ app.add_middleware(
 
 class EssayRequest(BaseModel):
     essay: str
+    prompt_name: str | None = None
+    assignment: str | None = None
+    source_text: str | None = None
 
 @app.get("/")
 def home():
@@ -66,6 +73,7 @@ def home():
 @app.post("/predict")
 def predict(data: EssayRequest):
     essay_text = data.essay
+    source_text = data.source_text or ""
 
     features = extract_features_single(essay_text)
     features_scaled = scaler.transform(features)
@@ -73,16 +81,39 @@ def predict(data: EssayRequest):
     prediction = model_xgb.predict(features_scaled)
     score = int(round(float(prediction[0])))
 
-    feedback_detail = generate_feedback(score, essay_text)
+    score = max(1, min(score, 6))
+
+    max_score = 6
+    achievement = round((score / max_score) * 100)
+
+    feedback_detail = generate_feedback(
+        score=score,
+        essay_text=essay_text,
+        source_text=source_text
+    )
 
     return {
+        "prompt_name": data.prompt_name,
         "score": score,
         "feedback": f"Esai mendapatkan skor {score}.",
+        "max_score": max_score,
+        "achievement": achievement,
         "category": feedback_detail["category"],
         "strengths": feedback_detail["strengths"],
         "weaknesses": feedback_detail["weaknesses"],
         "essay_length": len(essay_text)
     }
+
+@app.get("/prompts")
+def get_prompts():
+    return [
+        {
+            "prompt_name": item["prompt_name"],
+            "assignment": item["assignment"],
+            "source_text": item["source_text"]
+        }
+        for item in prompts_data
+    ]
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -189,13 +220,16 @@ def extract_features_single(essay_text):
 
     return all_features
 
-def generate_feedback(score, essay_text):
+def generate_feedback(score, essay_text, source_text=""):
     words = essay_text.split()
     word_count = len(words)
     sentences = essay_text.count(".") + essay_text.count("!") + essay_text.count("?")
 
     strengths = []
     weaknesses = []
+
+    essay_lower = essay_text.lower()
+    source_lower = source_text.lower()
 
     if word_count >= 250:
         strengths.append("Esai memiliki panjang yang cukup dan menunjukkan pengembangan ide.")
@@ -219,14 +253,30 @@ def generate_feedback(score, essay_text):
     else:
         weaknesses.append("Kesimpulan masih kurang terlihat atau belum dikembangkan.")
 
+    if source_lower:
+        source_words = set(re.findall(r"\b[a-z]{5,}\b", source_lower))
+        essay_words = set(re.findall(r"\b[a-z]{5,}\b", essay_lower))
+
+        overlap = essay_words.intersection(source_words)
+        overlap_ratio = len(overlap) / max(len(source_words), 1)
+
+        if overlap_ratio > 0.03:
+            strengths.append("Esai memiliki keterkaitan kata kunci dengan bacaan referensi.")
+        else:
+            weaknesses.append("Esai masih kurang menunjukkan keterkaitan dengan bacaan referensi.")
+
     if score >= 6:
-        category = "Sangat Baik"
+        category = "Excellent"
     elif score >= 5:
-        category = "Baik"
+        category = "Very Good"
     elif score >= 4:
-        category = "Cukup"
+        category = "Good"
+    elif score >= 3:
+        category = "Fair"
+    elif score >= 2:
+        category = "Poor"
     else:
-        category = "Perlu Perbaikan"
+        category = "Very Poor"
 
     return {
         "category": category,

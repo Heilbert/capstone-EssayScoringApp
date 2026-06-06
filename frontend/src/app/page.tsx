@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 
 type Result = {
+  prompt_name: string;
   score: number;
   feedback: string;
+  max_score: number;
+  achievement: number;
   category: string;
   strengths: string[];
   weaknesses: string[];
@@ -51,7 +54,12 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ essay })
+        body: JSON.stringify({
+          prompt_name: selectedPrompt?.prompt_name,
+          assignment: selectedPrompt?.assignment,
+          source_text: selectedPrompt?.source_text,
+          essay: essay,
+         })
       });
 
       const data = await response.json();
@@ -140,48 +148,69 @@ export default function Home() {
             {loading ? "Memproses..." : "Nilai Esai"}
           </button>
 
-          {result && (
-            <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
-              <h2 className="mb-3 text-2xl font-semibold text-gray-900">
-                Hasil Penilaian
-              </h2>
+{result && (
+  <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow">
+    <h2 className="mb-4 text-2xl font-bold text-gray-900">
+      Hasil Penilaian
+    </h2>
 
-              <p className="text-gray-800">
-                <strong>Skor:</strong> {result.score}
-              </p>
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-lg bg-blue-50 p-4">
+        <p className="text-sm text-blue-700">Prompt</p>
+        <p className="text-lg font-semibold text-blue-900">
+          {result.prompt_name}
+        </p>
+      </div>
 
-	      <p className="text-gray-800">
-                <strong>Kategori:</strong> {result.category}
-              </p>
+      <div className="rounded-lg bg-gray-50 p-4">
+        <p className="text-sm text-gray-600">Score</p>
+        <p className="text-lg font-semibold text-gray-900">
+          {result.score} / {result.max_score}
+        </p>
+      </div>
 
-              <p className="text-gray-800">
-                <strong>Feedback:</strong> {result.feedback}
-              </p>
+      <div className="rounded-lg bg-purple-50 p-4">
+        <p className="text-sm text-purple-700">Achievement</p>
+        <p className="text-lg font-semibold text-purple-900">
+          {result.achievement}%
+        </p>
+      </div>
 
-              <p className="text-gray-800">
-                <strong>Panjang Esai:</strong> {result.essay_length} karakter
-              </p>
+      <div className="rounded-lg bg-yellow-50 p-4">
+        <p className="text-sm text-yellow-700">Category</p>
+        <p className="text-lg font-semibold text-yellow-900">
+          {result.category}
+        </p>
+      </div>
+    </div>
 
-              <div className="mt-4">
-                <h3 className="font-semibold text-green-700">Strength</h3>
-                <ul className="mt-2 list-disc pl-5 text-gray-800">
-                  {result.strengths.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </div>
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="rounded-lg bg-green-50 p-4">
+        <h3 className="mb-2 font-semibold text-green-700">
+          Strength
+        </h3>
 
-              <div className="mt-4">
-                <h3 className="font-semibold text-red-700">Weakness</h3>
-                  <ul className="mt-2 list-disc pl-5 text-gray-800">
-                    {result.weaknesses.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-               </div>
+        <ul className="space-y-2 text-gray-800">
+          {result.strengths.map((item, index) => (
+            <li key={index}>✓ {item}</li>
+          ))}
+        </ul>
+      </div>
 
-            </div>
-          )}
+      <div className="rounded-lg bg-red-50 p-4">
+        <h3 className="mb-2 font-semibold text-red-700">
+          Weakness
+        </h3>
+
+        <ul className="space-y-2 text-gray-800">
+          {result.weaknesses.map((item, index) => (
+            <li key={index}>✗ {item}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+)}
         </section>
 
         <section className="rounded-xl bg-white p-8 shadow">
