@@ -21,13 +21,18 @@ type Result = {
 };
 
 type HistoryItem = {
+  prompt_name: string;
   essay: string;
   score: number;
-  feedback: string;
+  max_score: number;
+  achievement: number;
+  category: string;
   date: string;
 };
 
 export default function Home() {
+  const [prompts, setPrompts] = useState<PromptItem[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<PromptItem | null>(null);
   const [essay, setEssay] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -38,6 +43,20 @@ export default function Home() {
     if (savedHistory) {
       setHistory(JSON.parse(savedHistory));
     }
+
+    const fetchPrompts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompts`);
+        const data = await response.json();
+
+        setPrompts(data);
+        setSelectedPrompt(data[0]);
+      } catch (error) {
+        alert("Gagal mengambil data prompt dari backend.");
+      }
+    };
+
+    fetchPrompts();
   }, []);
 
   const saveHistory = (item: HistoryItem) => {
@@ -47,6 +66,11 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
+
+    if (!selectedPrompt) {
+      alert("Pilih kategori/topik essay terlebih dahulu.");
+      return;
+    }
     if (!essay.trim()) {
       alert("Masukkan teks esai terlebih dahulu.");
       return;
@@ -72,9 +96,12 @@ export default function Home() {
       setResult(data);
 
       saveHistory({
+        prompt_name: data.prompt_name,
         essay,
         score: data.score,
-        feedback: data.feedback,
+        max_score: data.max_score,
+        achievement: data.achievement,
+        category: data.category,
         date: new Date().toLocaleString()
       });
     } catch (error) {
@@ -128,9 +155,55 @@ export default function Home() {
             Essay Scoring App
           </h1>
 
-          <p className="mb-6 text-gray-600">
-            Masukkan teks esai atau upload file .txt/.pdf untuk mendapatkan skor dan feedback.
-          </p>
+<p className="mb-6 text-gray-600">
+  Pilih kategori/topik essay, baca pertanyaan dan bacaan referensi, lalu tulis jawaban essay untuk mendapatkan skor otomatis.
+</p>
+
+<div className="mb-6">
+  <label className="mb-2 block font-semibold text-gray-900">
+    Pilih Kategori / Topik Essay
+  </label>
+
+  <select
+    className="w-full rounded-lg border border-gray-300 p-3 text-gray-900"
+    value={selectedPrompt?.prompt_name || ""}
+    onChange={(e) => {
+      const prompt = prompts.find(
+        (item) => item.prompt_name === e.target.value
+      );
+      setSelectedPrompt(prompt || null);
+      setResult(null);
+    }}
+  >
+    {prompts.map((item) => (
+      <option key={item.prompt_name} value={item.prompt_name}>
+        {item.prompt_name}
+      </option>
+    ))}
+  </select>
+</div>
+
+{selectedPrompt && (
+  <>
+    <div className="mb-6 rounded-lg bg-blue-50 p-4">
+      <h2 className="mb-2 text-xl font-bold text-blue-900">
+        Pertanyaan
+      </h2>
+      <p className="whitespace-pre-line text-sm text-blue-900">
+        {selectedPrompt.assignment}
+      </p>
+    </div>
+
+    <div className="mb-6 rounded-lg bg-gray-50 p-4">
+      <h2 className="mb-2 text-xl font-bold text-gray-900">
+        Bacaan Referensi
+      </h2>
+      <div className="max-h-64 overflow-y-auto whitespace-pre-line text-sm text-gray-700">
+        {selectedPrompt.source_text}
+      </div>
+    </div>
+  </>
+)}
 
           <input
             type="file"
@@ -243,12 +316,21 @@ export default function Home() {
                   className="rounded-lg border border-gray-200 bg-gray-50 p-4"
                 >
                   <p className="text-sm text-gray-500">{item.date}</p>
-                  <p className="mt-2 text-gray-800">
-                    <strong>Skor:</strong> {item.score}
-                  </p>
-                  <p className="text-gray-800">
-                    <strong>Feedback:</strong> {item.feedback}
-                  </p>
+<p className="mt-2 text-gray-800">
+  <strong>Prompt:</strong> {item.prompt_name}
+</p>
+
+<p className="text-gray-800">
+  <strong>Skor:</strong> {item.score} / {item.max_score}
+</p>
+
+<p className="text-gray-800">
+  <strong>Achievement:</strong> {item.achievement}%
+</p>
+
+<p className="text-gray-800">
+  <strong>Category:</strong> {item.category}
+</p>
                   <p className="mt-2 line-clamp-3 text-gray-700">
                     {item.essay}
                   </p>
