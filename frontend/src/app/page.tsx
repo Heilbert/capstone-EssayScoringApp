@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 
+type PromptItem = {
+  prompt_name: string;
+  assignment: string;
+  source_text: string;
+};
+
 type Result = {
   prompt_name: string;
   score: number;
